@@ -62,8 +62,10 @@ module tb_uart_rx;
         send_byte(8'hAA); // 10101010 - alternating bits
         send_byte(8'h00); // 00000000 - all zeros
         send_byte(8'hFF); // 11111111 - all ones
-        // Wait to ensure all data is processed
-        #100000;
+        send_byte(8'h6B);
+        send_byte(8'hFF); // 11111111 - all ones
+    // Wait to ensure all data is processed
+        #200000;
         $finish; // End simulation
     end
 
