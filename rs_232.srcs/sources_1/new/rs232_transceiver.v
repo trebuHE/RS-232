@@ -12,7 +12,6 @@ module rs232_transceiver(
     
     wire [7:0] rx_data;
     wire rx_ready;
-    reg [7:0] received_data;
     uart_rx rx (
         .clk_i(clk_i),
         .rst_i(rst_i),
@@ -21,25 +20,21 @@ module rs232_transceiver(
         .ready_o(rx_ready)
         );
 
-    always @(posedge clk_i or posedge rst_i) begin
-        if (rst_i) begin
-            received_data <= 8'b0;
-        end else if (rx_ready) begin
-            received_data <= rx_data;
-        end
-    end
-
     wire [7:0] modified_data;
     add_0x20 adder (
-        .val_i(recived_data),
+        .val_i(rx_data),
         .val_o(modified_data)
         );
    
     wire tx_ready;
+    wire [7:0] tx_data;
+
+    assign tx_data = rx_ready ? modified_data : 8'bZ;
+    
     uart_tx tx (
         .clk_i(clk_i),
         .rst_i(rst_i),
-        .data_i(modified_data),
+        .data_i(tx_data),
         .tx_o(TXD_o),
         .ready_o(tx_ready)
         );
