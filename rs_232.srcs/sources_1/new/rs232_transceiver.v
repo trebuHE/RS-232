@@ -10,8 +10,9 @@ module rs232_transceiver(
     parameter BAUD_RATE = 9600;
     parameter CLK_FREQ = 100000000; // 100 MHz
     
-    reg [7:0] rx_data;
-    reg rx_ready;
+    wire [7:0] rx_data;
+    wire rx_ready;
+    reg [7:0] received_data;
     uart_rx rx (
         .clk_i(clk_i),
         .rst_i(rst_i),
@@ -20,13 +21,21 @@ module rs232_transceiver(
         .ready_o(rx_ready)
         );
 
-    reg [7:0] modified_data;
+    always @(posedge clk_i or posedge rst_i) begin
+        if (rst_i) begin
+            received_data <= 8'b0;
+        end else if (rx_ready) begin
+            received_data <= rx_data;
+        end
+    end
+
+    wire [7:0] modified_data;
     add_0x20 adder (
-        .val_i(rx_data),
+        .val_i(recived_data),
         .val_o(modified_data)
         );
    
-    reg tx_ready;
+    wire tx_ready;
     uart_tx tx (
         .clk_i(clk_i),
         .rst_i(rst_i),
