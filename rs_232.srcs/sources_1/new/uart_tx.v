@@ -22,7 +22,7 @@ always @(posedge clk_i or posedge rst_i) begin
         tx_o <= 1;
         ready_o <= 1;
         counter <= CLK_PER_BIT;
-        shift_reg <= 10'b0;
+        shift_reg <= {1'b1, 9'b0};
         bits <= 5'b0;
     end else begin
         if(ready_o && (shift_reg != {1'b1, data_i, 1'b0})) begin // ready and input data changed
@@ -39,10 +39,10 @@ always @(posedge clk_i or posedge rst_i) begin
                 counter <= CLK_PER_BIT;
             end
             
-            if(bits < 11) begin
+            if(bits < 10) begin
                 ready_o <= 0;
                 tx_o <= shift_reg[bits];
-            end else if (bits >= 11) begin
+            end else if (bits >= 10) begin
                 tx_o <= 1;
                 ready_o <= 1;
                 bits <= 5'b0;
