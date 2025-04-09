@@ -13,8 +13,8 @@ module uart_rx(
     
     localparam CLK_PER_BIT = CLK_FREQ / BAUD_RATE;
     
-    reg [15:0] counter;
-    reg [7:0] shift_reg;
+    reg [14:0] counter;
+    reg [9:0] shift_reg;
     reg [4:0] bits;
     reg started;
     
@@ -22,7 +22,7 @@ module uart_rx(
         if (rst_i) begin
             data_o <= 8'b0;
             counter <= 15'b0;
-            shift_reg <= 8'b0;
+            shift_reg <= 10'b0;
             bits <= 5'b0;
             ready_o <= 0;
             started <= 0;
@@ -30,33 +30,30 @@ module uart_rx(
             if (!rx_i && !started) begin
                 // data line low and no ongoing transmission
                 started <= 1;
-                counter <= CLK_PER_BIT * 2;
+                counter <= CLK_PER_BIT;
                 bits <= 0;
             end
             
             if (started) begin
                 if (counter > 0) begin
                     counter <= counter - 1;
+                    if (counter == CLK_PER_BIT/2) begin
+                        shift_reg[9:0] <= {shift_reg[8:0], rx_i};
+                    end       
                 end else begin
                     bits <= bits + 1;
                     counter <= CLK_PER_BIT;
                 end
                 
-                if (bits < 8) begin
+                if (bits < 10) begin
                     ready_o <= 0;
-                end else if (bits == 8) begin
+                end else if (bits == 10) begin
                     started <= 0;
-                    data_o <= {shift_reg[0], shift_reg[1], shift_reg[2], shift_reg[3], shift_reg[4], shift_reg[5], shift_reg[6], shift_reg[7]};
+                    data_o <= {shift_reg[1], shift_reg[2], shift_reg[3], shift_reg[4], shift_reg[5], shift_reg[6], shift_reg[7], shift_reg[8]};
                     ready_o <= 1;
                     bits <= 0;
                 end    
             end             
         end           
-    end
-    
-    always @(posedge clk_i) begin
-        if (started && counter == CLK_PER_BIT / 2) begin
-            shift_reg[7:0] <= {shift_reg[6:0], rx_i};
-        end
     end 
 endmodule
